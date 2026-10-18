@@ -8,3 +8,16 @@ logs/
 *.pyd
 .idea/
 .vscode/
+# Generated outputs
+*.jsonl
+
+ai_roadmap.json
+executive_report.json
+function_ai_opportunities.json
+
+# Temporary copies
+* copy.json
+
+# logs
+logs/
+

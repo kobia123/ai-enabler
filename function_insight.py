@@ -6,20 +6,22 @@ import httpx
 
 load_dotenv()
 
-PROMPT_VERSION = "1.0"
+PROMPT_VERSION = "3.0"
 
 MODEL_NAME = "gpt-6.1-sol"
 
 client = OpenAI(
     http_client=httpx.Client(
         verify=False,
-        timeout=120
+        timeout=300
     )
 )
 
 SYSTEM_PROMPT = """
-You are a senior enterprise architect, business analyst,
-AI strategist and transformation consultant.
+You are a senior enterprise architect,
+business analyst,
+AI strategist,
+and transformation consultant.
 
 Analyze ONE business function.
 
@@ -31,24 +33,20 @@ Your objective is to identify:
 4. Information flows
 5. Business KPIs
 6. AI opportunities
-7. Implementation readiness
-8. Recommended AI patterns
-9. Opportunity prioritization
+7. Opportunity prioritization
 
 Use only provided information whenever possible.
 
 When information is missing:
 
-- make reasonable enterprise assumptions
-- explicitly mark assumptions using confidence levels
+- make reasonable assumptions
+- mark assumptions using confidence levels
 - do not present assumptions as facts
 
 Confidence Levels:
 
-high = explicitly supported by supplied content
-
-medium = strongly inferred from supplied content
-
+high = directly supported
+medium = strongly inferred
 low = assumption requiring validation
 
 Business Value:
@@ -60,27 +58,68 @@ very_high
 
 Impact Score:
 
-1 = minimal value
-2 = limited value
-3 = moderate value
-4 = significant value
-5 = transformative value
+1 = minimal
+2 = limited
+3 = moderate
+4 = significant
+5 = transformative
 
 Complexity Score:
 
-1 = very easy implementation
-2 = easy implementation
-3 = moderate implementation
-4 = difficult implementation
-5 = highly complex implementation
+1 = very easy
+2 = easy
+3 = moderate
+4 = difficult
+5 = highly complex
 
 Data Readiness Score:
 
-1 = required data mostly unavailable
-2 = data partially available
-3 = moderate availability
-4 = good availability
-5 = strong availability and quality
+1 = unavailable
+2 = partial
+3 = moderate
+4 = good
+5 = strong
+
+Consider opportunities across:
+
+- Knowledge Management
+- Process Automation
+- Decision Intelligence
+- Predictive Analytics
+- Agentic AI
+- Employee Productivity
+- Customer/Citizen Experience
+
+Every opportunity MUST use one of these values
+for "pattern_category".
+
+Generate a diverse portfolio.
+
+Do not generate more than two opportunities
+from the same category.
+
+Keep responses concise.
+
+For pain points:
+- short name only
+
+For systems:
+- system name only
+
+For information flows:
+- source and destination only
+
+For KPIs:
+- KPI name only
+
+For AI opportunities:
+- use_case = one sentence maximum
+- no business_users
+- no required_data
+- no implementation_prerequisites
+- no risks
+- no safeguards
+- no expected_value
 
 Priority Rules:
 
@@ -107,49 +146,43 @@ Schema:
   "pain_points": [
     {
       "name": "",
-      "description": "",
-      "confidence": "",
-      "business_impact": ""
+      "confidence": ""
     }
   ],
 
-  "systems": [],
+  "systems": [
+    {
+      "name": "",
+      "confidence": ""
+    }
+  ],
 
-  "information_flows": [],
+  "information_flows": [
+    {
+      "source": "",
+      "destination": ""
+    }
+  ],
 
-  "kpis": [],
+  "kpis": [
+    {
+      "name": "",
+      "confidence": ""
+    }
+  ],
 
   "ai_opportunities": [
     {
       "name": "",
-
-      "use_case": "",
-
       "pattern_category": "",
-
-      "copilot_pattern": "",
-
+      "use_case": "",
       "business_value": "",
 
       "impact_score": 0,
-
       "complexity_score": 0,
-
       "data_readiness_score": 0,
 
-      "priority": "",
-
-      "expected_value": "",
-
-      "business_users": [],
-
-      "required_data": [],
-
-      "implementation_prerequisites": [],
-
-      "risks": [],
-
-      "safeguards": []
+      "priority": ""
     }
   ]
 }
@@ -179,21 +212,17 @@ BUSINESS FUNCTION:
 """
     )
 
-    raw_response = response.output_text.strip()
+    raw_response = (
+        response.output_text
+        .replace("```json", "")
+        .replace("```", "")
+        .strip()
+    )
 
     if not raw_response:
 
         raise Exception(
             "Empty response returned from model"
-        )
-
-    if raw_response.startswith("```"):
-
-        raw_response = (
-            raw_response
-            .replace("```json", "")
-            .replace("```", "")
-            .strip()
         )
 
     try:
@@ -204,7 +233,9 @@ BUSINESS FUNCTION:
 
     except Exception:
 
-        print("\n===== INVALID JSON =====\n")
+        print(
+            "\n===== INVALID JSON =====\n"
+        )
 
         print(
             raw_response[:5000]

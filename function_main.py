@@ -2,6 +2,7 @@ import json
 import os
 import time
 import hashlib
+import traceback
 
 from datetime import datetime, UTC
 
@@ -78,15 +79,13 @@ for index, function in enumerate(
 
     try:
 
-        # =====================================
-        # CACHE HIT
-        # =====================================
-
         if os.path.exists(cache_file):
 
             cache_hit = True
 
-            print("Loaded from cache")
+            print(
+                "Loaded from cache"
+            )
 
             with open(
                 cache_file,
@@ -98,20 +97,24 @@ for index, function in enumerate(
                     cached
                 )
 
-            # New cache format
             if (
                 isinstance(response_data, dict)
                 and "result" in response_data
             ):
 
-                insight = response_data["result"]
-
-                usage = response_data.get(
-                    "usage",
-                    {}
+                insight = (
+                    response_data[
+                        "result"
+                    ]
                 )
 
-            # Legacy cache format
+                usage = (
+                    response_data.get(
+                        "usage",
+                        {}
+                    )
+                )
+
             else:
 
                 insight = response_data
@@ -122,21 +125,33 @@ for index, function in enumerate(
                     "total_tokens": None
                 }
 
-        # =====================================
-        # CACHE MISS
-        # =====================================
-
         else:
 
-            print("Calling OpenAI...")
-
-            response_data = analyze_function(
-                function
+            print(
+                "Calling OpenAI..."
             )
 
-            insight = response_data["result"]
+            response_data = (
+                analyze_function(
+                    function
+                )
+            )
 
-            usage = response_data["usage"]
+            print(
+                "OpenAI response received"
+            )
+
+            insight = (
+                response_data[
+                    "result"
+                ]
+            )
+
+            usage = (
+                response_data[
+                    "usage"
+                ]
+            )
 
             with open(
                 cache_file,
@@ -151,7 +166,9 @@ for index, function in enumerate(
                     indent=2
                 )
 
-        results.append(insight)
+        results.append(
+            insight
+        )
 
         elapsed = round(
             time.time() - start_time,
@@ -177,84 +194,59 @@ for index, function in enumerate(
             f"{usage.get('total_tokens')}"
         )
 
-        # =====================================
-        # EXECUTION LOG
-        # =====================================
-
-        log_entry = {
-            "timestamp": datetime.now(
-                UTC
-            ).isoformat(),
-
-            "function": function_name,
-
-            "model": MODEL_NAME,
-
-            "prompt_version": PROMPT_VERSION,
-
-            "cache_hit": cache_hit,
-
-            "execution_seconds": elapsed,
-
-            "input_tokens": usage.get(
-                "input_tokens"
-            ),
-
-            "output_tokens": usage.get(
-                "output_tokens"
-            ),
-
-            "total_tokens": usage.get(
-                "total_tokens"
-            )
-        }
-
-        with open(
-            "execution_log.jsonl",
-            "a",
-            encoding="utf-8"
-        ) as log:
-
-            log.write(
-                json.dumps(
-                    log_entry,
-                    ensure_ascii=False
-                )
-                + "\n"
-            )
-
-        # =====================================
-        # CHECKPOINT SAVE
-        # =====================================
-
-        with open(
-            "function_insights_partial.json",
-            "w",
-            encoding="utf-8"
-        ) as checkpoint:
-
-            json.dump(
-                {
-                    "prompt_version":
-                        PROMPT_VERSION,
-
-                    "function_insights":
-                        results
-                },
-                checkpoint,
-                ensure_ascii=False,
-                indent=2
-            )
-
-    except Exception as ex:
+    except Exception:
 
         print(
-            f"ERROR processing "
+            f"\nERROR processing "
             f"'{function_name}'"
         )
 
-        print(ex)
+        print(
+            "\n===== FULL ERROR =====\n"
+        )
 
-# =========================================
+        traceback.print_exc()
+
+        print(
+            "\n===== END ERROR =====\n"
+        )
+
+# =====================================
 # FINAL OUTPUT
-# ===================
+# =====================================
+
+print(
+    "\nSaving final output..."
+)
+
+final_output = {
+    "prompt_version":
+        PROMPT_VERSION,
+
+    "function_insights":
+        results
+}
+
+with open(
+    "function_insights.json",
+    "w",
+    encoding="utf-8"
+) as output:
+
+    json.dump(
+        final_output,
+        output,
+        ensure_ascii=False,
+        indent=2
+    )
+
+print(
+    f"function_insights.json "
+    f"created with "
+    f"{len(results)} functions"
+)
+
+print(
+    f"Prompt Version: "
+    f"{PROMPT_VERSION}"
+)
