@@ -1,16 +1,21 @@
 from dataclasses import dataclass, field
-from typing import List
+from typing import Optional
 
 
 @dataclass
 class ExecutionResult:
 
     status: str
-
     agent_id: str
 
     output_artifact: str
 
-    duration_seconds: float
+    duration_seconds: float = 0.0
 
-    errors: List[str] = field(default_factory=list)
+    input_tokens: Optional[int] = None
+    output_tokens: Optional[int] = None
+    total_tokens: Optional[int] = None
+
+    errors: list[str] = field(
+        default_factory=list
+    )

@@ -38,9 +38,18 @@ class AnalyzeOrganizationAgent(BaseAgent):
     ):
 
         return ExecutionResult(
-            status="Completed",
-            agent_id=self.metadata.agent_id,
-            output_artifact="organization_profile.json",
-            duration_seconds=0,
-            errors=[]
-        )
+    status="Completed",
+    agent_id=self.metadata.agent_id,
+    output_artifact="executive_report.json",
+    duration_seconds=duration,
+    input_tokens=usage.get(
+        "input_tokens"
+    ),
+    output_tokens=usage.get(
+        "output_tokens"
+    ),
+    total_tokens=usage.get(
+        "total_tokens"
+    ),
+    errors=[]
+)
